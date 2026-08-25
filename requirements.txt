@@ -1,31 +1,37 @@
-# One dependency list for both halves of the project.
+# Dependencies for RUNNING the app (chat + search). This is what Streamlit Cloud
+# installs, so it has to stay small: the free tier can't hold the CUDA build of
+# torch, and `docling` alone drags in ~1.5GB of parsing models.
 #
-# Install into the local virtual environment:
-#     python -m venv .venv
-#     .\.venv\Scripts\Activate.ps1
+# Ingestion needs more. Locally, install both:
 #     pip install -r requirements.txt
+#     pip install -r requirements-ingest.txt
+#
+# The deployed app doesn't miss docling, because ingested books live in Supabase:
+# you ingest on your laptop, the deployed app reads the same index.
 
 # --- UI -------------------------------------------------------------------
 streamlit
 
-# --- Agent (study-coach) --------------------------------------------------
+# --- Agent ----------------------------------------------------------------
 langgraph
 langchain-openai          # OpenAI-compatible client; works for Groq/HF/Gemini/Ollama
 trustcall                 # patch-based memory updates
 
-# --- Ingestion (textbook-rag) --------------------------------------------
-docling                   # PDF parsing incl. OCR and table structure
-sentence-transformers     # local embedding model (bge-small)
-rank_bm25                 # keyword search for the file backend
+# --- Search ---------------------------------------------------------------
+# CPU-only torch, explicitly. pip's default index serves the CUDA build on
+# Linux - gigabytes of GPU libraries a free CPU host can never use, and the
+# single biggest reason a deploy fails to install.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+sentence-transformers     # embeds the query at search time
+rank_bm25                 # keyword half of hybrid search
 numpy
 
-# --- Storage --------------------------------------------------------------
+# --- Storage + persistent memory -----------------------------------------
 pgvector
-psycopg[binary]           # Postgres driver
+psycopg[binary]
+psycopg-pool
+langgraph-checkpoint-postgres
 
 # --- Voice ----------------------------------------------------------------
 gtts                      # text-to-speech; no API key needed
-
-# --- Persistent memory (MEMORY_BACKEND=postgres) --------------------------
-langgraph-checkpoint-postgres
-psycopg-pool

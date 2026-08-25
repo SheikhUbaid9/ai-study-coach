@@ -191,6 +191,26 @@ def render_books_tab():
     if pending:
         st.warning(f"{len(pending)} book(s) not ingested yet — Study Coach can't read them.")
 
+    # Ingestion needs docling, which is deliberately absent from the deployed
+    # build (too large for a free host). Say so plainly instead of letting the
+    # button throw an ImportError that looks like a broken app.
+    try:
+        import docling  # noqa: F401
+
+        can_ingest = True
+    except ImportError:
+        can_ingest = False
+
+    if not can_ingest:
+        st.info(
+            "**Ingestion runs on your own machine, not here.**\n\n"
+            "The parsing library is too large for free hosting, so this deployed "
+            "app does chat and search only. Ingest locally and the books appear "
+            "here automatically — both read the same database.\n\n"
+            "```\npip install -r requirements-ingest.txt\npython run.py ingest\n```"
+        )
+        return
+
     c1, c2 = st.columns([1, 3])
     start_from = c2.selectbox(
         "Start from stage", [1, 2, 3, 4, 5],

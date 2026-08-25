@@ -1,0 +1,9 @@
+# Ingestion only - install on top of requirements.txt, locally.
+#
+#     pip install -r requirements-ingest.txt
+#
+# Kept separate because docling pulls ~1.5GB of layout/OCR models. That is fine
+# on a laptop and fatal on a free hosting tier, which is why the deployed app
+# does chat and search only.
+
+docling
