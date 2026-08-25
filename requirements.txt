@@ -1,0 +1,31 @@
+# One dependency list for both halves of the project.
+#
+# Install into the local virtual environment:
+#     python -m venv .venv
+#     .\.venv\Scripts\Activate.ps1
+#     pip install -r requirements.txt
+
+# --- UI -------------------------------------------------------------------
+streamlit
+
+# --- Agent (study-coach) --------------------------------------------------
+langgraph
+langchain-openai          # OpenAI-compatible client; works for Groq/HF/Gemini/Ollama
+trustcall                 # patch-based memory updates
+
+# --- Ingestion (textbook-rag) --------------------------------------------
+docling                   # PDF parsing incl. OCR and table structure
+sentence-transformers     # local embedding model (bge-small)
+rank_bm25                 # keyword search for the file backend
+numpy
+
+# --- Storage --------------------------------------------------------------
+pgvector
+psycopg[binary]           # Postgres driver
+
+# --- Voice ----------------------------------------------------------------
+gtts                      # text-to-speech; no API key needed
+
+# --- Persistent memory (MEMORY_BACKEND=postgres) --------------------------
+langgraph-checkpoint-postgres
+psycopg-pool

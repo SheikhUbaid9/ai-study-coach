@@ -1,0 +1,32 @@
+# Dependencies for the DEPLOYED chat app only.
+#
+# Deliberately excludes `docling` (~1.5GB with its models), because ingestion
+# stays on your laptop. That works because ingested books live in Supabase, not
+# on disk: you ingest locally, the deployed app reads the same index.
+#
+# sentence-transformers IS needed even though ingestion isn't — every search has
+# to embed the incoming question with the same model the chunks were embedded
+# with, or the vectors aren't comparable.
+
+streamlit
+langgraph
+langchain-openai
+trustcall
+gtts
+
+# search
+#
+# CPU-only torch, explicitly. pip's default index serves the CUDA build on
+# Linux - roughly 2.5GB of GPU libraries that a free CPU Space can never use,
+# and which alone would blow the image size and build timeout.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+sentence-transformers
+rank_bm25
+numpy
+
+# storage + persistent memory
+pgvector
+psycopg[binary]
+psycopg-pool
+langgraph-checkpoint-postgres

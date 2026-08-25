@@ -1,0 +1,16 @@
+# Theme. Streamlit's own theming is used rather than injected CSS wherever
+# possible — it survives Streamlit upgrades, injected selectors don't.
+
+[theme]
+base = "light"
+primaryColor = "#1F6F5C"              # deep green: buttons, focus rings, active tab
+backgroundColor = "#FCFBF8"           # warm off-white, easier on the eyes than pure white
+secondaryBackgroundColor = "#F2EFE9"  # sidebar + chat bubbles
+textColor = "#1A1A1A"
+font = "sans serif"
+
+[server]
+runOnSave = true                      # edit a file, the app reloads itself
+
+[browser]
+gatherUsageStats = false
