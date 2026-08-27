@@ -1,8 +1,2 @@
-# System (apt) packages for the deployed app. requirements.txt is Python-level
-# and cannot install these.
-#
-# opencv arrives via the ML stack and needs these two shared libraries; without
-# them the app dies at import with "libGL.so.1: cannot open shared object file",
-# which reads like a Python error but is a missing OS package.
 libgl1
 libglib2.0-0
