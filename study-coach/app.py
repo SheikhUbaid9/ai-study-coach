@@ -180,11 +180,16 @@ def render_books_tab():
     for b in books:
         c1, c2, c3, c4 = st.columns([5, 2, 2, 1])
         c1.write(f"**{b['name']}**")
-        c2.write(f"{b['size_mb']:.1f} MB")
-        c3.write("✅ ingested" if b["ingested"] else "⏳ not ingested")
-        if c4.button("Delete", key=f"delbook_{b['name']}"):
-            b["path"].unlink()
-            st.rerun()
+        c2.write(f"{b['size_mb']:.1f} MB" if b["local"] else "—")
+        if not b["local"]:
+            # Searchable, but the PDF itself lives on whichever machine ingested it.
+            c3.write("✅ ingested")
+            c4.caption("in database")
+        else:
+            c3.write("✅ ingested" if b["ingested"] else "⏳ not ingested")
+            if c4.button("Delete", key=f"delbook_{b['name']}"):
+                b["path"].unlink()
+                st.rerun()
 
     st.divider()
     pending = [b for b in books if not b["ingested"]]

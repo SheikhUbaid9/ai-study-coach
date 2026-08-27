@@ -59,29 +59,77 @@ def status() -> str:
     return _status or "unknown"
 
 
+def ingested_doc_ids() -> set[str]:
+    """Which documents are actually searchable.
+
+    Has to ask whichever store is in use, not the local files. On a deployed
+    app there IS no local `out/` directory — the books were ingested on someone's
+    laptop and pushed to Postgres — so reading the file would report every book
+    as un-ingested while search works perfectly. Two different answers to the
+    same question is worse than either one alone.
+    """
+    if not _ensure_path():
+        return set()
+
+    from config import STORE_BACKEND
+
+    if STORE_BACKEND == "pgvector":
+        try:
+            import psycopg
+
+            from config import PG_DSN, PG_TABLE
+
+            with psycopg.connect(PG_DSN, connect_timeout=10) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(f"SELECT DISTINCT doc_id FROM {PG_TABLE}")
+                    return {row[0] for row in cur.fetchall()}
+        except Exception as exc:
+            print(f"[textbook_search] couldn't list ingested docs: {exc}")
+            return set()
+
+    try:
+        from common import read_jsonl
+
+        return {r["doc_id"] for r in read_jsonl("04_embedded")}
+    except Exception:
+        return set()
+
+
 def library() -> list[dict]:
     """What's on disk and what's been ingested — for the UI's Books tab."""
     if not _ensure_path():
         return []
     from config import BOOKS_DIR
 
-    try:
-        from common import read_jsonl
-
-        ingested = {r["doc_id"] for r in read_jsonl("04_embedded")}
-    except Exception:
-        ingested = set()
+    ingested = ingested_doc_ids()
 
     BOOKS_DIR.mkdir(parents=True, exist_ok=True)
-    return [
+    books = [
         {
             "name": p.name,
             "path": p,
             "size_mb": p.stat().st_size / 1e6,
             "ingested": p.stem in ingested,
+            "local": True,
         }
         for p in sorted(BOOKS_DIR.glob("*.pdf"))
     ]
+
+    # Books ingested elsewhere. On a deployed app this is usually ALL of them:
+    # the PDFs sit on the laptop that ingested them, while the searchable chunks
+    # live in Postgres. Listing only local files would show an empty shelf while
+    # the coach happily quotes those same books.
+    local_stems = {b["path"].stem for b in books}
+    for doc_id in sorted(ingested - local_stems):
+        books.append({
+            "name": f"{doc_id}.pdf",
+            "path": None,
+            "size_mb": 0.0,
+            "ingested": True,
+            "local": False,
+        })
+
+    return books
 
 
 def subjects() -> list[str]:
